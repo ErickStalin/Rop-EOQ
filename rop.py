@@ -16,6 +16,18 @@ class DataViewer(tk.Tk):
         self.frame = ttk.Frame(self)
         self.frame.pack(padx=10, pady=10, fill="both", expand=True)
 
+        self.search_frame = ttk.Frame(self.frame)
+        self.search_frame.pack(pady=10, fill="x")
+
+        self.search_label = ttk.Label(self.search_frame, text="Buscar por Nombre:")
+        self.search_label.pack(side="left")
+
+        self.search_entry = ttk.Entry(self.search_frame)
+        self.search_entry.pack(side="left", padx=(5, 0), fill="x", expand=True)
+
+        self.search_button = ttk.Button(self.search_frame, text="Buscar", command=self.search_data)
+        self.search_button.pack(side="left", padx=(5, 0))
+
         self.table = ttk.Treeview(self.frame)
         self.table.pack(side="left", fill="both", expand=True)
 
@@ -91,6 +103,11 @@ class DataViewer(tk.Tk):
 
             datos['CantidadReorden'] = datos.apply(lambda row: calcular_cantidad_reorden(row['EstrategiaCompra'], row['CostoMantener'], row['RoturaStock'], row['Stock'], row['Vendido'], row['CostoOrdenar']), axis=1)
 
+            # Agregar la columna "Codigo" después de la columna "NombreP"
+            datos.insert(1, "Codigo", range(1, len(datos) + 1))
+
+            self.original_data = datos.copy()
+
             self.table["columns"] = list(datos.columns)
             for column in self.table["columns"]:
                 self.table.column(column, anchor="center", width=100)
@@ -100,6 +117,18 @@ class DataViewer(tk.Tk):
 
             self.table.delete(*self.table.get_children())
             for index, row in datos.iterrows():
+                self.table.insert("", "end", text=index, values=list(row))
+
+    def search_data(self):
+        query = self.search_entry.get().strip()
+        if query:
+            results = self.original_data[self.original_data['NombreP'].str.contains(query, case=False)]
+            self.table.delete(*self.table.get_children())
+            for index, row in results.iterrows():
+                self.table.insert("", "end", text=index, values=list(row))
+        else:
+            self.table.delete(*self.table.get_children())
+            for index, row in self.original_data.iterrows():
                 self.table.insert("", "end", text=index, values=list(row))
 
 if __name__ == "__main__":
